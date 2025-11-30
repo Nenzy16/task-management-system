@@ -19,7 +19,7 @@ Jalankan perintah berikut di terminal:
 ```bash
 cd backend
 npm install
-npm run dev
+npm start
 # Server akan berjalan di http://localhost:3000
 ```
 
@@ -64,3 +64,14 @@ Header: `Authorization: Bearer <token>`
 
 * **Swagger UI:** Akses dokumentasi interaktif di `http://localhost:3000/api-docs` (saat backend berjalan).
 * **Postman:** Import file `Task-Management-API.postman_collection.json` yang tersedia di folder `backend/` untuk melakukan testing otomatis.
+
+---
+
+## 👥 Anggota Tim
+
+Proyek ini dikerjakan oleh:
+
+* **Natanael Parulian Sitompul**
+* **Vancel Bernard Fredrik Rengkung**
+* **Edward Langi**
+* **Resen Nimrod Doaly**
