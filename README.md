@@ -19,7 +19,7 @@ Jalankan perintah berikut di terminal:
 ```bash
 cd backend
 npm install
-node server.js
+npm start
 # Server akan berjalan di http://localhost:3000
 ```
 
