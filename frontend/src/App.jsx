@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  CheckCircle, Circle, Trash2, Plus, LogOut, User, 
-  Layout, Calendar, AlertCircle 
+  CheckCircle, Circle, Trash2, Edit2, Plus, LogOut, User, 
+  Layout, Calendar, AlertCircle, X 
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3000/api';
@@ -11,6 +11,9 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
   const [tasks, setTasks] = useState([]);
+  
+  // State baru untuk Edit
+  const [editingTask, setEditingTask] = useState(null); 
   
   // Form states
   const [loginData, setLoginData] = useState({ email: '', password: '' });
@@ -127,6 +130,7 @@ function App() {
     }
   };
 
+  // --- Fungsi Update Task (PATCH) ---
   const handleUpdateTask = async (id, updates) => {
     try {
       const token = localStorage.getItem('token');
@@ -140,6 +144,11 @@ function App() {
       });
       if (res.ok) {
         fetchTasks();
+        if (updates.title) { // Jika ini update dari form edit (bukan cuma centang complete)
+             setEditingTask(null);
+             setSuccess('Task updated successfully!');
+             setTimeout(() => setSuccess(''), 3000);
+        }
       }
     } catch (err) {
       setError('Failed to update task');
@@ -164,7 +173,7 @@ function App() {
     }
   };
 
-  // --- Auth Screen UI ---
+  // --- Auth Screen UI (Tetap Sama) ---
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -382,6 +391,68 @@ function App() {
               </span>
             </div>
 
+            {/* --- FORM EDIT (Hanya Muncul saat editingTask != null) --- */}
+            {editingTask && (
+              <div className="bg-white rounded-2xl shadow-md border border-indigo-200 p-6 mb-4 animate-fade-in relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                 <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                        <Edit2 size={18} /> Edit Task
+                    </h3>
+                    <button onClick={() => setEditingTask(null)} className="text-gray-400 hover:text-gray-600">
+                        <X size={20} />
+                    </button>
+                 </div>
+                 
+                 <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleUpdateTask(editingTask.id, {
+                        title: editingTask.title,
+                        description: editingTask.description,
+                        priority: editingTask.priority
+                    });
+                 }} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
+                            <input
+                                type="text"
+                                value={editingTask.title}
+                                onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Priority</label>
+                            <select
+                                value={editingTask.priority}
+                                onChange={(e) => setEditingTask({...editingTask, priority: e.target.value})}
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                            >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+                        <textarea
+                            value={editingTask.description}
+                            onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+                            rows="2"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button type="button" onClick={() => setEditingTask(null)} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm">Save Changes</button>
+                    </div>
+                 </form>
+              </div>
+            )}
+
             {tasks.length === 0 ? (
               <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
@@ -395,7 +466,10 @@ function App() {
                 {tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="group bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-indigo-200 transition-all duration-200"
+                    className={`group bg-white rounded-xl border p-4 transition-all duration-200 ${
+                        // Highlight task yang sedang diedit
+                        editingTask?.id === task.id ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md' : 'border-gray-200 hover:shadow-md hover:border-indigo-200'
+                    }`}
                   >
                     <div className="flex items-start gap-4">
                       <button
@@ -414,6 +488,7 @@ function App() {
                           }`}>
                             {task.title}
                           </h3>
+                          {/* INI STYLE BADGE LAMA YANG KAMU SUKA 👇 */}
                           <span className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${
                             task.priority === 'high' ? 'bg-red-50 text-red-600 border border-red-100' :
                             task.priority === 'medium' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
@@ -428,13 +503,24 @@ function App() {
                         )}
                       </div>
 
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        title="Delete task"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        {/* TOMBOL EDIT BARU 👇 */}
+                        <button
+                            onClick={() => setEditingTask(task)}
+                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                            title="Edit task"
+                        >
+                            <Edit2 size={18} />
+                        </button>
+
+                        <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Delete task"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
